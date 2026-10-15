@@ -18,7 +18,9 @@ pub fn process_distribute(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramR
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
+
     signer_info.is_signer()?;
+
     sender_info
         .is_writable()?
         .as_associated_token_account(&signer_info.key, &MINT_ADDRESS)?
@@ -29,14 +31,21 @@ pub fn process_distribute(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramR
     let treasury = treasury_info
         .has_address(&treasury_pda().0)?
         .as_account_mut::<Treasury>(&blackgold_stake_api::ID)?
-        .assert_mut_err(|t| t.total_staked > 0, BlackgoldStakeError::NoDeposits.into())?;
+        .assert_mut_err(
+            |t| t.total_staked > 0,
+            BlackgoldStakeError::NoDeposits.into(),
+        )?;
+
     let vesting = vesting_info
         .has_address(&vesting_pda().0)?
         .as_account_mut::<Vesting>(&blackgold_stake_api::ID)?;
+
     treasury_tokens_info
         .is_writable()?
         .as_associated_token_account(&treasury_info.key, &MINT_ADDRESS)?;
+
     token_program.is_program(&spl_token::ID)?;
+    
     blackgold_stake_program.is_program(&blackgold_stake_api::ID)?;
 
     // Vest any unvested ORE into the treasury.
