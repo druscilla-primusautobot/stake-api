@@ -1,5 +1,5 @@
-use ore_mint_api::consts::MINT_ADDRESS;
-use ore_stake_api::prelude::*;
+use blackgold_mint_api::consts::MINT_ADDRESS;
+use blackgold_stake_api::prelude::*;
 use steel::*;
 
 /// Distributes ORE from the sender to stakers.
@@ -13,7 +13,7 @@ pub fn process_distribute(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramR
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, sender_info, ore_mint_info, treasury_info, treasury_tokens_info, vesting_info, token_program, ore_stake_program] =
+    let [signer_info, sender_info, blackgold_mint_info, treasury_info, treasury_tokens_info, vesting_info, token_program, blackgold_stake_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -23,19 +23,21 @@ pub fn process_distribute(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramR
         .is_writable()?
         .as_associated_token_account(&signer_info.key, &MINT_ADDRESS)?
         .assert(|s| s.amount() >= amount)?;
-    ore_mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
+
+    blackgold_mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
+
     let treasury = treasury_info
         .has_address(&treasury_pda().0)?
-        .as_account_mut::<Treasury>(&ore_stake_api::ID)?
-        .assert_mut_err(|t| t.total_staked > 0, OreStakeError::NoDeposits.into())?;
+        .as_account_mut::<Treasury>(&blackgold_stake_api::ID)?
+        .assert_mut_err(|t| t.total_staked > 0, BlackgoldStakeError::NoDeposits.into())?;
     let vesting = vesting_info
         .has_address(&vesting_pda().0)?
-        .as_account_mut::<Vesting>(&ore_stake_api::ID)?;
+        .as_account_mut::<Vesting>(&blackgold_stake_api::ID)?;
     treasury_tokens_info
         .is_writable()?
         .as_associated_token_account(&treasury_info.key, &MINT_ADDRESS)?;
     token_program.is_program(&spl_token::ID)?;
-    ore_stake_program.is_program(&ore_stake_api::ID)?;
+    blackgold_stake_program.is_program(&blackgold_stake_api::ID)?;
 
     // Vest any unvested ORE into the treasury.
     vesting.vest(&clock, treasury);
@@ -69,7 +71,7 @@ pub fn process_distribute(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramR
     program_log(
         &[treasury_info.clone()],
         DistributeEvent {
-            disc: OreStakeEvent::Distribute as u64,
+            disc: BlackgoldStakeEvent::Distribute as u64,
             amount,
             total_staked: treasury.total_staked,
             ts: clock.unix_timestamp,

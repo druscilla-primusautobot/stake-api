@@ -8,7 +8,7 @@ pub use vesting::*;
 
 use crate::consts::*;
 
-use ore_mint_api::consts::MINT_ADDRESS;
+use blackgold_mint_api::consts::MINT_ADDRESS;
 use steel::*;
 
 #[repr(u8)]

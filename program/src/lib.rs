@@ -16,7 +16,7 @@ use init::*;
 use log::*;
 use withdraw::*;
 
-use ore_stake_api::instruction::*;
+use blackgold_stake_api::instruction::*;
 use solana_security_txt::security_txt;
 use steel::*;
 
@@ -25,17 +25,17 @@ pub fn process_instruction(
     accounts: &[AccountInfo],
     data: &[u8],
 ) -> ProgramResult {
-    let (ix, data) = parse_instruction(&ore_stake_api::ID, program_id, data)?;
+    let (ix, data) = parse_instruction(&blackgold_stake_api::ID, program_id, data)?;
 
     match ix {
-        OreStakeInstruction::Claim => process_claim(accounts, data)?,
-        OreStakeInstruction::Close => process_close(accounts, data)?,
-        OreStakeInstruction::Compound => process_compound(accounts, data)?,
-        OreStakeInstruction::Deposit => process_deposit(accounts, data)?,
-        OreStakeInstruction::Distribute => process_distribute(accounts, data)?,
-        OreStakeInstruction::Init => process_init(accounts, data)?,
-        OreStakeInstruction::Log => process_log(accounts, data)?,
-        OreStakeInstruction::Withdraw => process_withdraw(accounts, data)?,
+        BlackgoldStakeInstruction::Claim => process_claim(accounts, data)?,
+        BlackgoldStakeInstruction::Close => process_close(accounts, data)?,
+        BlackgoldStakeInstruction::Compound => process_compound(accounts, data)?,
+        BlackgoldStakeInstruction::Deposit => process_deposit(accounts, data)?,
+        BlackgoldStakeInstruction::Distribute => process_distribute(accounts, data)?,
+        BlackgoldStakeInstruction::Init => process_init(accounts, data)?,
+        BlackgoldStakeInstruction::Log => process_log(accounts, data)?,
+        BlackgoldStakeInstruction::Withdraw => process_withdraw(accounts, data)?,
     }
 
     Ok(())
@@ -44,8 +44,8 @@ pub fn process_instruction(
 entrypoint!(process_instruction);
 
 security_txt! {
-    name: "ORE Stake",
-    project_url: "https://ore.supply",
+    name: "Blackgold Stake",
+    project_url: "https://blackgold.supply",
     contacts: "email:hardhatchad@gmail.com,discord:hardhatchad",
     policy: "https://github.com/regolith-labs/ore-stake/blob/master/SECURITY.md",
     preferred_languages: "en",

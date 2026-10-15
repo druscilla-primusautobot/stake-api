@@ -1,5 +1,5 @@
-use ore_mint_api::consts::MINT_ADDRESS;
-use ore_stake_api::prelude::*;
+use blackgold_mint_api::consts::MINT_ADDRESS;
+use blackgold_stake_api::prelude::*;
 use steel::*;
 
 /// Deposits ORE into the staking contract.
@@ -12,7 +12,7 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, payer_info, mint_info, sender_info, stake_info, stake_tokens_info, treasury_info, vesting_info, system_program, token_program, associated_token_program, ore_stake_program] =
+    let [signer_info, payer_info, mint_info, sender_info, stake_info, stake_tokens_info, treasury_info, vesting_info, system_program, token_program, associated_token_program, blackgold_stake_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -23,19 +23,20 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
     let sender = sender_info
         .is_writable()?
         .as_associated_token_account(&signer_info.key, &MINT_ADDRESS)?;
-    stake_info
-        .is_writable()?
-        .has_seeds(&[STAKE, &signer_info.key.to_bytes()], &ore_stake_api::ID)?;
+    stake_info.is_writable()?.has_seeds(
+        &[STAKE, &signer_info.key.to_bytes()],
+        &blackgold_stake_api::ID,
+    )?;
     let treasury = treasury_info
         .has_address(&treasury_pda().0)?
-        .as_account_mut::<Treasury>(&ore_stake_api::ID)?;
+        .as_account_mut::<Treasury>(&blackgold_stake_api::ID)?;
     let vesting = vesting_info
         .has_address(&vesting_pda().0)?
-        .as_account_mut::<Vesting>(&ore_stake_api::ID)?;
+        .as_account_mut::<Vesting>(&blackgold_stake_api::ID)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
     associated_token_program.is_program(&spl_associated_token_account::ID)?;
-    ore_stake_program.is_program(&ore_stake_api::ID)?;
+    blackgold_stake_program.is_program(&blackgold_stake_api::ID)?;
 
     // Open stake account.
     let stake = if stake_info.data_is_empty() {
@@ -43,10 +44,10 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
             stake_info,
             system_program,
             &payer_info,
-            &ore_stake_api::ID,
+            &blackgold_stake_api::ID,
             &[STAKE, &signer_info.key.to_bytes()],
         )?;
-        let stake = stake_info.as_account_mut::<Stake>(&ore_stake_api::ID)?;
+        let stake = stake_info.as_account_mut::<Stake>(&blackgold_stake_api::ID)?;
         stake.authority = *signer_info.key;
         stake.balance = 0;
         stake.compound_fee_reserve = 0;
@@ -59,7 +60,7 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
         stake
     } else {
         stake_info
-            .as_account_mut::<Stake>(&ore_stake_api::ID)?
+            .as_account_mut::<Stake>(&blackgold_stake_api::ID)?
             .assert_mut(|s| s.authority == *signer_info.key)?
     };
 
@@ -81,7 +82,7 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
     // Deposit into stake account.
     let amount = stake.deposit(amount, &clock, treasury, &sender, vesting);
 
-    // Transfer ORE to stake token account.
+    // Transfer TOKEN to stake token account.
     transfer(
         signer_info,
         sender_info,
@@ -99,14 +100,14 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
     let stake_tokens =
         stake_tokens_info.as_associated_token_account(stake_info.key, mint_info.key)?;
     if stake_tokens.amount() < stake.balance {
-        return Err(OreStakeError::InsufficientReserves.into());
+        return Err(BlackgoldStakeError::InsufficientReserves.into());
     }
 
     // Log event.
     program_log(
         &[treasury_info.clone()],
         DepositEvent {
-            disc: OreStakeEvent::Deposit as u64,
+            disc: BlackgoldStakeEvent::Deposit as u64,
             authority: *signer_info.key,
             amount,
             ts: clock.unix_timestamp,

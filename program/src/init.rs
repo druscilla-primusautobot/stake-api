@@ -1,5 +1,5 @@
-use ore_mint_api::consts::MINT_ADDRESS;
-use ore_stake_api::prelude::*;
+use blackgold_mint_api::consts::MINT_ADDRESS;
+use blackgold_stake_api::prelude::*;
 use steel::*;
 
 /// Initialize the program.
@@ -27,14 +27,14 @@ pub fn process_init(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult
             treasury_info,
             system_program,
             signer_info,
-            &ore_stake_api::ID,
+            &blackgold_stake_api::ID,
             &[TREASURY],
         )?;
-        let treasury = treasury_info.as_account_mut::<Treasury>(&ore_stake_api::ID)?;
+        let treasury = treasury_info.as_account_mut::<Treasury>(&blackgold_stake_api::ID)?;
         treasury.rewards_factor = Numeric::ZERO;
         treasury.total_staked = 0;
     } else {
-        treasury_info.as_account_mut::<Treasury>(&ore_stake_api::ID)?;
+        treasury_info.as_account_mut::<Treasury>(&blackgold_stake_api::ID)?;
     }
 
     // Create treasury tokens account.
@@ -58,15 +58,15 @@ pub fn process_init(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult
             vesting_info,
             system_program,
             signer_info,
-            &ore_stake_api::ID,
+            &blackgold_stake_api::ID,
             &[VESTING],
         )?;
-        let vesting = vesting_info.as_account_mut::<Vesting>(&ore_stake_api::ID)?;
+        let vesting = vesting_info.as_account_mut::<Vesting>(&blackgold_stake_api::ID)?;
         vesting.initial_amount = 0;
         vesting.vested_amount = 0;
         vesting.start_time = 0;
     } else {
-        vesting_info.as_account_mut::<Vesting>(&ore_stake_api::ID)?;
+        vesting_info.as_account_mut::<Vesting>(&blackgold_stake_api::ID)?;
     }
 
     Ok(())

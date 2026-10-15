@@ -2,7 +2,7 @@ use steel::*;
 
 #[derive(Debug, Error, Clone, Copy, PartialEq, Eq, IntoPrimitive)]
 #[repr(u32)]
-pub enum OreStakeError {
+pub enum BlackgoldStakeError {
     #[error("No deposits")]
     NoDeposits = 0,
 
@@ -10,4 +10,4 @@ pub enum OreStakeError {
     InsufficientReserves = 1,
 }
 
-error!(OreStakeError);
+error!(BlackgoldStakeError);

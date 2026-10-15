@@ -1,5 +1,5 @@
-use ore_mint_api::consts::MINT_ADDRESS;
-use ore_stake_api::prelude::*;
+use blackgold_mint_api::consts::MINT_ADDRESS;
+use blackgold_stake_api::prelude::*;
 use steel::*;
 
 /// Withdraws ORE from the staking contract.
@@ -10,7 +10,7 @@ pub fn process_withdraw(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, mint_info, recipient_info, stake_info, stake_tokens_info, treasury_info, vesting_info, system_program, token_program, associated_token_program, ore_stake_program] =
+    let [signer_info, mint_info, recipient_info, stake_info, stake_tokens_info, treasury_info, vesting_info, system_program, token_program, associated_token_program, blackgold_stake_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -19,22 +19,22 @@ pub fn process_withdraw(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     recipient_info.is_writable()?;
     let stake = stake_info
-        .has_seeds(&[STAKE, &signer_info.key.to_bytes()], &ore_stake_api::ID)?
-        .as_account_mut::<Stake>(&ore_stake_api::ID)?
+        .has_seeds(&[STAKE, &signer_info.key.to_bytes()], &blackgold_stake_api::ID)?
+        .as_account_mut::<Stake>(&blackgold_stake_api::ID)?
         .assert_mut(|s| s.authority == *signer_info.key)?;
     stake_tokens_info
         .is_writable()?
         .as_associated_token_account(stake_info.key, mint_info.key)?;
     let treasury = treasury_info
         .has_address(&treasury_pda().0)?
-        .as_account_mut::<Treasury>(&ore_stake_api::ID)?;
+        .as_account_mut::<Treasury>(&blackgold_stake_api::ID)?;
     let vesting = vesting_info
         .has_address(&vesting_pda().0)?
-        .as_account_mut::<Vesting>(&ore_stake_api::ID)?;
+        .as_account_mut::<Vesting>(&blackgold_stake_api::ID)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
     associated_token_program.is_program(&spl_associated_token_account::ID)?;
-    ore_stake_program.is_program(&ore_stake_api::ID)?;
+    blackgold_stake_program.is_program(&blackgold_stake_api::ID)?;
 
     // Open recipient token account.
     if recipient_info.data_is_empty() {
@@ -54,7 +54,7 @@ pub fn process_withdraw(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     // Withdraw from stake account.
     let amount = stake.withdraw(amount, &clock, treasury, vesting);
 
-    // Transfer ORE to recipient.
+    // Transfer TOKEN to recipient.
     transfer_signed(
         stake_info,
         stake_tokens_info,
@@ -68,14 +68,14 @@ pub fn process_withdraw(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     let stake_tokens =
         stake_tokens_info.as_associated_token_account(stake_info.key, mint_info.key)?;
     if stake_tokens.amount() < stake.balance {
-        return Err(OreStakeError::InsufficientReserves.into());
+        return Err(BlackgoldStakeError::InsufficientReserves.into());
     }
 
     // Log event.
     program_log(
         &[treasury_info.clone()],
         WithdrawEvent {
-            disc: OreStakeEvent::Withdraw as u64,
+            disc: BlackgoldStakeEvent::Withdraw as u64,
             authority: *signer_info.key,
             amount,
             ts: clock.unix_timestamp,

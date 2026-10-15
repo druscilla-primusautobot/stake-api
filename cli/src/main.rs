@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
-use ore_mint_api::consts::{MINT_ADDRESS, TOKEN_DECIMALS};
-use ore_stake_api::prelude::*;
+use blackgold_mint_api::consts::{MINT_ADDRESS, TOKEN_DECIMALS};
+use blackgold_stake_api::prelude::*;
 use solana_client::{
     nonblocking::rpc_client::RpcClient,
     rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig},
@@ -54,7 +54,7 @@ async fn init(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
-    let ix = ore_stake_api::sdk::init(payer.pubkey());
+    let ix = blackgold_stake_api::sdk::init(payer.pubkey());
     submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }
@@ -68,7 +68,7 @@ async fn log_stake(
     let mut treasury = get_treasury(&rpc).await?;
     let clock = get_clock(rpc).await?;
     let mut vesting = get_vesting(rpc).await?;
-    let staker_address = ore_stake_api::state::stake_pda(authority).0;
+    let staker_address = blackgold_stake_api::state::stake_pda(authority).0;
     let mut stake = get_stake(rpc, authority).await?;
     stake.update_rewards(&clock, &mut treasury, &mut vesting);
     println!("Stake");
@@ -102,7 +102,7 @@ async fn log_stake(
 }
 
 async fn log_treasury(rpc: &RpcClient) -> Result<(), anyhow::Error> {
-    let treasury_address = ore_stake_api::state::treasury_pda().0;
+    let treasury_address = blackgold_stake_api::state::treasury_pda().0;
     let treasury = get_treasury(rpc).await?;
     println!("Treasury");
     println!("  address: {}", treasury_address);
@@ -207,7 +207,7 @@ async fn audit_reserves(rpc: &RpcClient) -> Result<(), anyhow::Error> {
 
     for (i, (stake_address, mut stake)) in all_stakes.into_iter().enumerate() {
         // Verify PDA derivation.
-        let expected_pda = ore_stake_api::state::stake_pda(stake.authority).0;
+        let expected_pda = blackgold_stake_api::state::stake_pda(stake.authority).0;
         if stake_address != expected_pda {
             pda_failures.push((stake_address, stake.authority));
         }
@@ -251,7 +251,7 @@ async fn audit_reserves(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     }
 
     // Fetch treasury token balance.
-    let treasury_tokens_address = ore_stake_api::state::treasury_tokens_address();
+    let treasury_tokens_address = blackgold_stake_api::state::treasury_tokens_address();
     let treasury_token_balance = match rpc.get_account(&treasury_tokens_address).await {
         Ok(account) => spl_token::state::Account::unpack(&account.data)
             .map(|t| t.amount)
@@ -368,7 +368,7 @@ async fn get_all_stakes(rpc: &RpcClient) -> Result<Vec<(Pubkey, Stake)>, anyhow:
         ..Default::default()
     };
     let accounts = rpc
-        .get_program_accounts_with_config(&ore_stake_api::ID, config)
+        .get_program_accounts_with_config(&blackgold_stake_api::ID, config)
         .await?;
     let stakes = accounts
         .into_iter()
@@ -400,7 +400,7 @@ async fn get_stakes_by_authority(
         ..Default::default()
     };
     let accounts = rpc
-        .get_program_accounts_with_config(&ore_stake_api::ID, config)
+        .get_program_accounts_with_config(&blackgold_stake_api::ID, config)
         .await?;
     let stakes = accounts
         .into_iter()
@@ -420,21 +420,21 @@ async fn get_clock(rpc: &RpcClient) -> Result<Clock, anyhow::Error> {
 }
 
 async fn get_treasury(rpc: &RpcClient) -> Result<Treasury, anyhow::Error> {
-    let treasury_pda = ore_stake_api::state::treasury_pda();
+    let treasury_pda = blackgold_stake_api::state::treasury_pda();
     let account = rpc.get_account(&treasury_pda.0).await?;
     let treasury = Treasury::try_from_bytes(&account.data)?;
     Ok(*treasury)
 }
 
 async fn get_stake(rpc: &RpcClient, authority: Pubkey) -> Result<Stake, anyhow::Error> {
-    let stake_pda = ore_stake_api::state::stake_pda(authority);
+    let stake_pda = blackgold_stake_api::state::stake_pda(authority);
     let account = rpc.get_account(&stake_pda.0).await?;
     let stake = Stake::try_from_bytes(&account.data)?;
     Ok(*stake)
 }
 
 async fn get_vesting(rpc: &RpcClient) -> Result<Vesting, anyhow::Error> {
-    let vesting_pda = ore_stake_api::state::vesting_pda();
+    let vesting_pda = blackgold_stake_api::state::vesting_pda();
     let account = rpc.get_account(&vesting_pda.0).await?;
     let vesting = Vesting::try_from_bytes(&account.data)?;
     Ok(*vesting)

@@ -2,7 +2,7 @@ use steel::*;
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive)]
-pub enum OreStakeInstruction {
+pub enum BlackgoldStakeInstruction {
     // Misc
     Log = 0,
     Init = 1,
@@ -58,11 +58,11 @@ pub struct Init {}
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Close {}
 
-instruction!(OreStakeInstruction, Log);
-instruction!(OreStakeInstruction, Init);
-instruction!(OreStakeInstruction, Distribute);
-instruction!(OreStakeInstruction, Deposit);
-instruction!(OreStakeInstruction, Withdraw);
-instruction!(OreStakeInstruction, Claim);
-instruction!(OreStakeInstruction, Compound);
-instruction!(OreStakeInstruction, Close);
+instruction!(BlackgoldStakeInstruction, Log);
+instruction!(BlackgoldStakeInstruction, Init);
+instruction!(BlackgoldStakeInstruction, Distribute);
+instruction!(BlackgoldStakeInstruction, Deposit);
+instruction!(BlackgoldStakeInstruction, Withdraw);
+instruction!(BlackgoldStakeInstruction, Claim);
+instruction!(BlackgoldStakeInstruction, Compound);
+instruction!(BlackgoldStakeInstruction, Close);

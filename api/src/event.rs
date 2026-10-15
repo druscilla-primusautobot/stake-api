@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use steel::*;
 
-pub enum OreStakeEvent {
+pub enum BlackgoldStakeEvent {
     Claim = 0,
     Deposit = 1,
     Distribute = 2,

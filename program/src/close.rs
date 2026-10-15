@@ -1,5 +1,5 @@
-use ore_mint_api::consts::MINT_ADDRESS;
-use ore_stake_api::prelude::*;
+use blackgold_mint_api::consts::MINT_ADDRESS;
+use blackgold_stake_api::prelude::*;
 use steel::*;
 
 /// Closes an empty stake account and returns rent to the payer.
@@ -14,8 +14,8 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     recipient_info.is_writable()?;
     let stake = stake_info
-        .has_seeds(&[STAKE, &signer_info.key.to_bytes()], &ore_stake_api::ID)?
-        .as_account_mut::<Stake>(&ore_stake_api::ID)?
+        .has_seeds(&[STAKE, &signer_info.key.to_bytes()], &blackgold_stake_api::ID)?
+        .as_account_mut::<Stake>(&blackgold_stake_api::ID)?
         .assert_mut(|s| s.authority == *signer_info.key)?
         .assert_mut(|s| s.balance == 0 && s.rewards == 0)?;
     let stake_tokens = stake_tokens_info
