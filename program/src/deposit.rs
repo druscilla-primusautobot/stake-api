@@ -17,25 +17,36 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
+
     signer_info.is_signer()?;
+    
     payer_info.is_signer()?;
+    
     mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
+    
     let sender = sender_info
         .is_writable()?
         .as_associated_token_account(&signer_info.key, &MINT_ADDRESS)?;
+    
     stake_info.is_writable()?.has_seeds(
         &[STAKE, &signer_info.key.to_bytes()],
         &blackgold_stake_api::ID,
     )?;
+    
     let treasury = treasury_info
         .has_address(&treasury_pda().0)?
         .as_account_mut::<Treasury>(&blackgold_stake_api::ID)?;
+    
     let vesting = vesting_info
         .has_address(&vesting_pda().0)?
         .as_account_mut::<Vesting>(&blackgold_stake_api::ID)?;
+    
     system_program.is_program(&system_program::ID)?;
+    
     token_program.is_program(&spl_token::ID)?;
+    
     associated_token_program.is_program(&spl_associated_token_account::ID)?;
+    
     blackgold_stake_program.is_program(&blackgold_stake_api::ID)?;
 
     // Open stake account.
